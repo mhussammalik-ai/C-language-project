@@ -1,0 +1,773 @@
+/*
+ * UNIVERSITY SCHOLARSHIP ELIGIBILITY
+ * AND PERFORMANCE SYSTEM
+ */
+
+#include <stdio.h>
+#include <string.h>
+
+#define MAX_STUDENTS 30
+#define SUBJECTS 3
+
+
+void addStudent(char names[][50], int rollNumbers[],
+                float marks[][SUBJECTS], int *count);
+
+float studentAverage(float marks[][SUBJECTS], int index);
+
+float classAverage(float marks[][SUBJECTS], int count);
+
+char getGrade(float average);
+
+void getScholarship(float average, char scholarship[]);
+
+int findTopperRecursive(float marks[][SUBJECTS],
+                        int count, int index, int topper);
+
+void displayStudents(char names[][50], int rollNumbers[],
+                     float marks[][SUBJECTS], int count);
+
+void saveReport(char names[][50], int rollNumbers[],
+                float marks[][SUBJECTS], int count);
+
+void loadReport();
+
+
+/*
+ * ADD STUDENT
+ */
+
+void addStudent(char names[][50], int rollNumbers[],
+                float marks[][SUBJECTS], int *count)
+{
+    int i;
+
+    if (*count >= MAX_STUDENTS)
+    {
+        printf("\nMaximum 30 students allowed!\n");
+        return;
+    }
+
+    printf("\n--- ADD STUDENT ---\n");
+
+    printf("Enter Student Name: ");
+    scanf(" %[^\n]", names[*count]);
+
+    printf("Enter Roll Number: ");
+    scanf("%d", &rollNumbers[*count]);
+
+
+    for (i = 0; i < SUBJECTS; i++)
+    {
+        do
+        {
+            printf("Enter Marks for Subject %d (0-100): ",
+                   i + 1);
+
+            scanf("%f", &marks[*count][i]);
+
+
+            if (marks[*count][i] < 0 ||
+                marks[*count][i] > 100)
+            {
+                printf("Invalid Marks! Enter between 0 and 100.\n");
+            }
+
+        } while (marks[*count][i] < 0 ||
+                 marks[*count][i] > 100);
+    }
+
+
+    (*count)++;
+
+    printf("\nStudent added successfully!\n");
+}
+
+
+/*
+ * CALCULATE STUDENT AVERAGE
+ */
+
+float studentAverage(float marks[][SUBJECTS], int index)
+{
+    float total = 0;
+
+    int i;
+
+
+    for (i = 0; i < SUBJECTS; i++)
+    {
+        total += marks[index][i];
+    }
+
+
+    return total / SUBJECTS;
+}
+
+
+/*
+ * CALCULATE CLASS AVERAGE
+ */
+
+float classAverage(float marks[][SUBJECTS], int count)
+{
+    float total = 0;
+
+    int i;
+
+
+    if (count == 0)
+    {
+        return 0;
+    }
+
+
+    for (i = 0; i < count; i++)
+    {
+        total += studentAverage(marks, i);
+    }
+
+
+    return total / count;
+}
+
+
+/*
+ * CALCULATE GRADE
+ */
+
+char getGrade(float average)
+{
+    if (average >= 80)
+    {
+        return 'A';
+    }
+    else if (average >= 70)
+    {
+        return 'B';
+    }
+    else if (average >= 60)
+    {
+        return 'C';
+    }
+    else if (average >= 50)
+    {
+        return 'D';
+    }
+    else
+    {
+        return 'F';
+    }
+}
+
+
+/*
+ * SCHOLARSHIP ELIGIBILITY
+ */
+
+void getScholarship(float average, char scholarship[])
+{
+    if (average >= 85)
+    {
+        strcpy(scholarship, "FULL SCHOLARSHIP");
+    }
+    else if (average >= 75)
+    {
+        strcpy(scholarship, "PARTIAL SCHOLARSHIP");
+    }
+    else if (average >= 65)
+    {
+        strcpy(scholarship, "ELIGIBLE FOR REVIEW");
+    }
+    else
+    {
+        strcpy(scholarship, "NOT ELIGIBLE");
+    }
+}
+
+
+/*
+ * RECURSIVE FUNCTION
+ * FIND TOPPER
+ */
+
+int findTopperRecursive(float marks[][SUBJECTS],
+                        int count, int index, int topper)
+{
+    if (index >= count)
+    {
+        return topper;
+    }
+
+
+    if (studentAverage(marks, index) >
+        studentAverage(marks, topper))
+    {
+        topper = index;
+    }
+
+
+    return findTopperRecursive(
+        marks,
+        count,
+        index + 1,
+        topper
+    );
+}
+
+
+/*
+ * DISPLAY ALL STUDENTS
+ */
+
+void displayStudents(char names[][50], int rollNumbers[],
+                     float marks[][SUBJECTS], int count)
+{
+    int i;
+
+    int j;
+
+    float average;
+
+    char scholarship[50];
+
+
+    if (count == 0)
+    {
+        printf("\nNo student records available.\n");
+        return;
+    }
+
+
+    printf("\n============================================\n");
+    printf("      STUDENT PERFORMANCE RECORDS\n");
+    printf("============================================\n");
+
+
+    for (i = 0; i < count; i++)
+    {
+        average = studentAverage(marks, i);
+
+
+        getScholarship(
+            average,
+            scholarship
+        );
+
+
+        printf("\nStudent %d\n",
+               i + 1);
+
+        printf("Name: %s\n",
+               names[i]);
+
+        printf("Roll Number: %d\n",
+               rollNumbers[i]);
+
+
+        for (j = 0; j < SUBJECTS; j++)
+        {
+            printf("Subject %d Marks: %.2f\n",
+                   j + 1,
+                   marks[i][j]);
+        }
+
+
+        printf("Average: %.2f\n",
+               average);
+
+        printf("Grade: %c\n",
+               getGrade(average));
+
+        printf("Scholarship Status: %s\n",
+               scholarship);
+
+        printf("--------------------------------------------\n");
+    }
+}
+
+
+/*
+ * SAVE REPORT TO FILE
+ */
+
+void saveReport(char names[][50], int rollNumbers[],
+                float marks[][SUBJECTS], int count)
+{
+    FILE *reportFile;
+
+    int i;
+
+    float average;
+
+    char scholarship[50];
+
+
+    if (count == 0)
+    {
+        printf("\nNo records available to save.\n");
+        return;
+    }
+
+
+    reportFile = fopen(
+        "scholarship_report.txt",
+        "w"
+    );
+
+
+    if (reportFile == NULL)
+    {
+        printf("\nError: File cannot be created!\n");
+        return;
+    }
+
+
+    fprintf(
+        reportFile,
+        " UNIVERSITY SCHOLARSHIP REPORT \n\n"
+    );
+
+
+    for (i = 0; i < count; i++)
+    {
+        average = studentAverage(
+            marks,
+            i
+        );
+
+
+        getScholarship(
+            average,
+            scholarship
+        );
+
+
+        fprintf(
+            reportFile,
+            "Student %d\n",
+            i + 1
+        );
+
+
+        fprintf(
+            reportFile,
+            "Name: %s\n",
+            names[i]
+        );
+
+
+        fprintf(
+            reportFile,
+            "Roll Number: %d\n",
+            rollNumbers[i]
+        );
+
+
+        fprintf(
+            reportFile,
+            "Average: %.2f\n",
+            average
+        );
+
+
+        fprintf(
+            reportFile,
+            "Grade: %c\n",
+            getGrade(average)
+        );
+
+
+        fprintf(
+            reportFile,
+            "Scholarship: %s\n",
+            scholarship
+        );
+
+
+        fprintf(
+            reportFile,
+            "----------------------------------------\n"
+        );
+    }
+
+
+    fprintf(
+        reportFile,
+        "\nClass Average: %.2f\n",
+        classAverage(marks, count)
+    );
+
+
+    fprintf(
+        reportFile,
+        "========================================\n"
+    );
+
+
+    fprintf(
+        reportFile,
+        "REPORT SAVED SUCCESSFULLY\n"
+    );
+
+
+    fclose(reportFile);
+
+
+    printf(
+        "\n[Report saved in scholarship_report.txt]\n"
+    );
+}
+
+
+/*
+ * LOAD REPORT FROM FILE
+ */
+
+void loadReport()
+{
+    FILE *reportFile;
+
+    char ch;
+
+
+    reportFile = fopen(
+        "scholarship_report.txt",
+        "r"
+    );
+
+
+    if (reportFile == NULL)
+    {
+        printf("\nNo saved report found!\n");
+        return;
+    }
+
+
+    printf("\n========================================\n");
+    printf("      SAVED SCHOLARSHIP REPORT\n");
+    printf("========================================\n\n");
+
+
+    while (
+        (ch = fgetc(reportFile)) != EOF
+    )
+    {
+        printf("%c", ch);
+    }
+
+
+    fclose(reportFile);
+}
+
+
+/*
+ * MAIN FUNCTION
+ */
+
+int main()
+{
+    char names[MAX_STUDENTS][50];
+
+    int rollNumbers[MAX_STUDENTS];
+
+    float marks[MAX_STUDENTS][SUBJECTS];
+
+
+    int studentCount = 0;
+
+    int choice;
+
+    int topper;
+
+    float average;
+
+    char scholarship[50];
+
+
+    printf("========================================\n");
+    printf(" UNIVERSITY SCHOLARSHIP ELIGIBILITY\n");
+    printf("      & PERFORMANCE SYSTEM\n");
+    printf("========================================\n");
+
+
+    do
+    {
+        printf("\n");
+
+        printf("========================================\n");
+
+        printf("1. Add Student Record\n");
+
+        printf("2. Display All Students\n");
+
+        printf("3. Check Student Performance\n");
+
+        printf("4. Calculate Class Average\n");
+
+        printf("5. Find Scholarship Topper\n");
+
+        printf("6. Save Report to File\n");
+
+        printf("7. Load Saved Report\n");
+
+        printf("8. Exit\n");
+
+        printf("========================================\n");
+
+
+        printf("Enter your choice: ");
+
+        scanf("%d", &choice);
+
+
+        /*
+         * ADD STUDENT
+         */
+
+        if (choice == 1)
+        {
+            addStudent(
+                names,
+                rollNumbers,
+                marks,
+                &studentCount
+            );
+        }
+
+
+        /*
+         * DISPLAY STUDENTS
+         */
+
+        else if (choice == 2)
+        {
+            displayStudents(
+                names,
+                rollNumbers,
+                marks,
+                studentCount
+            );
+        }
+
+
+        /*
+         * CHECK STUDENT PERFORMANCE
+         */
+
+        else if (choice == 3)
+        {
+            int roll;
+
+            int i;
+
+            int found = 0;
+
+
+            if (studentCount == 0)
+            {
+                printf("\nNo student records available.\n");
+            }
+            else
+            {
+                printf("Enter Roll Number: ");
+
+                scanf("%d", &roll);
+
+
+                for (i = 0;
+                     i < studentCount;
+                     i++)
+                {
+                    if (rollNumbers[i] == roll)
+                    {
+                        average =
+                            studentAverage(
+                                marks,
+                                i
+                            );
+
+
+                        getScholarship(
+                            average,
+                            scholarship
+                        );
+
+
+                        printf("\n--- STUDENT PERFORMANCE ---\n");
+
+                        printf("Name: %s\n",
+                               names[i]);
+
+                        printf("Roll Number: %d\n",
+                               rollNumbers[i]);
+
+                        printf("Average: %.2f\n",
+                               average);
+
+                        printf("Grade: %c\n",
+                               getGrade(average));
+
+                        printf("Scholarship Status: %s\n",
+                               scholarship);
+
+
+                        found = 1;
+
+                        break;
+                    }
+                }
+
+
+                if (found == 0)
+                {
+                    printf("\nStudent not found!\n");
+                }
+            }
+        }
+
+
+        /*
+         * CLASS AVERAGE
+         */
+
+        else if (choice == 4)
+        {
+            if (studentCount == 0)
+            {
+                printf("\nNo student records available.\n");
+            }
+            else
+            {
+                average =
+                    classAverage(
+                        marks,
+                        studentCount
+                    );
+
+
+                printf(
+                    "\nClass Average = %.2f\n",
+                    average
+                );
+            }
+        }
+
+
+        /*
+         * FIND TOPPER USING RECURSION
+         */
+
+        else if (choice == 5)
+        {
+            if (studentCount == 0)
+            {
+                printf("\nNo student records available.\n");
+            }
+            else
+            {
+                topper =
+                    findTopperRecursive(
+                        marks,
+                        studentCount,
+                        0,
+                        0
+                    );
+
+
+                average =
+                    studentAverage(
+                        marks,
+                        topper
+                    );
+
+
+                getScholarship(
+                    average,
+                    scholarship
+                );
+
+
+                printf("\n========================================\n");
+
+                printf("       SCHOLARSHIP TOPPER\n");
+
+                printf("========================================\n");
+
+
+                printf("Name: %s\n",
+                       names[topper]);
+
+                printf("Roll Number: %d\n",
+                       rollNumbers[topper]);
+
+                printf("Average: %.2f\n",
+                       average);
+
+                printf("Grade: %c\n",
+                       getGrade(average));
+
+                printf("Scholarship: %s\n",
+                       scholarship);
+            }
+        }
+
+
+        /*
+         * SAVE REPORT
+         */
+
+        else if (choice == 6)
+        {
+            saveReport(
+                names,
+                rollNumbers,
+                marks,
+                studentCount
+            );
+        }
+
+
+        /*
+         * LOAD REPORT
+         */
+
+        else if (choice == 7)
+        {
+            loadReport();
+        }
+
+
+        /*
+         * EXIT
+         */
+
+        else if (choice == 8)
+        {
+            printf(
+                "\nThank you for using the system!\n"
+            );
+
+            printf(
+                "Program Closed Successfully.\n"
+            );
+        }
+
+
+        /*
+         * INVALID CHOICE
+         */
+
+        else
+        {
+            printf(
+                "\nInvalid Choice! Try Again.\n"
+            );
+        }
+
+
+    } while (choice != 8);
+
+
+    return 0;
+}
